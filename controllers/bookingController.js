@@ -19,9 +19,9 @@ const createBooking = (io) => async (req, res) => {
     }
 
     await locationService.storeNotifiedDrivers(booking._id, driverIds);
-    res.status(201).send({ data: booking, success: true, error: null, message: "successfully created booking" });
+    res.status(201).send({ data: booking, success: true, error: null, message: "Booking Created Successfully" });
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(500).send(error.message);
   }
 };
 
@@ -43,10 +43,10 @@ const confirmBooking = (io) => async (req, res) => {
       }
     }
 
-    res.status(201).send({ data: booking, success: true, error: null, message: "successfully confirmed booking" });
+    res.status(201).send({ data: booking, success: true, error: null, message: "Booking Confirmed Successfully" });
 
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(500).send(error.message);
   }
 };
 

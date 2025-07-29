@@ -53,7 +53,6 @@ io.on('connection', (socket) => {
   
     socket.on('registerDriver', async (driverId) => {
       await locationService.setDriverSocket(driverId, socket.id);
-      console.log("set driver socket");
     });
 
   

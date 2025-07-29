@@ -1,140 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Driver UI</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .container {
-            margin-bottom: 20px;
-        }
-        input, button {
-            display: block;
-            margin-bottom: 10px;
-            padding: 10px;
-            width: 300px;
-        }
-        .booking-request {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        margin-bottom: 20px;
+      }
+      input,
+      button {
+        display: block;
+        margin-bottom: 10px;
+        padding: 10px;
+        width: 300px;
+      }
+      .booking-request {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h2>Login</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
     </div>
 
-
     <div class="container">
-        <h2>Booking Requests</h2>
-        <div id="bookingRequestsOutput"></div>
+      <h2>Booking Requests</h2>
+      <div id="bookingRequestsOutput"></div>
     </div>
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
-        let token = '';
-        let socket;
+      let token = "";
+      let socket;
 
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+      async function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-            try {
-            const response = await fetch('http://localhost:3030/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+        try {
+          const response = await fetch("http://localhost:3030/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
-            const data = await response.json();
-            token = data.data.token; 
-            alert('Logged in successfully');
+          const data = await response.json();
+          token = data.data.token;
+          alert("Logged in successfully");
 
-            socket = io('http://localhost:3030');
+          socket = io("http://localhost:3030");
 
-            socket.emit('registerDriver', data.data.user._id);
+          socket.emit("registerDriver", data.data.user._id);
 
-            socket.on('newBooking', (data) => {
-                const bookingRequestsOutput = document.getElementById('bookingRequestsOutput');
-                const bookingRequest = document.createElement('div');
-                bookingRequest.className = 'booking-request';
-                bookingRequest.id = `booking-${data.bookingId}`; 
-                bookingRequest.innerHTML = `
+          socket.on("newBooking", (data) => {
+            const bookingRequestsOutput = document.getElementById(
+              "bookingRequestsOutput"
+            );
+            const bookingRequest = document.createElement("div");
+            bookingRequest.className = "booking-request";
+            bookingRequest.id = `booking-${data.bookingId}`;
+            bookingRequest.innerHTML = `
                     <p>Booking ID: ${data.bookingId}</p>
                     <p>Source: ${data.source.latitude}, ${data.source.longitude}</p>
                     <p>Destination: ${data.destination.latitude}, ${data.destination.longitude}</p>
                     <p>Fare: ${data.fare}</p>
                     <button onclick="confirmBooking('${data.bookingId}')">Confirm Booking</button>
                 `;
-                bookingRequestsOutput.appendChild(bookingRequest);
-            });
+            bookingRequestsOutput.appendChild(bookingRequest);
+          });
 
-                socket.on('removeBooking', (data) => {
-                    const bookingElement = document.getElementById(`booking-${data.bookingId}`);
-                    if (bookingElement) {
-                        bookingElement.remove();
-                    }
-                });
-
-                socket.on('rideConfirmed', (data) => {
-                    const bookingElement = document.getElementById(`booking-${data.bookingId}`);
-                    if (bookingElement) {
-                        bookingElement.remove();
-                        alert(`Booking ${data.bookingId} has been confirmed by you.`);
-                    }
-                });
-            } catch (error) {
-                console.error('Error during login:', error);
-                alert('Login failed');
+          socket.on("removeBooking", (data) => {
+            const bookingElement = document.getElementById(
+              `booking-${data.bookingId}`
+            );
+            if (bookingElement) {
+              bookingElement.remove();
             }
-        }
+          });
 
-
-        async function confirmBooking(bookingId) {
-            try {
-            const response = await fetch('http://localhost:3030/api/bookings/confirm', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ bookingId })
-            });
-
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log(data);
-
-                alert('Booking confirmed: ' + JSON.stringify(data.data));
-
-                const bookingElement = document.getElementById(`booking-${bookingId}`);
-                if (bookingElement) {
-                    bookingElement.remove();
-                }
-            } catch (error) {
-                console.error('Error confirming booking:', error);
-                alert('Failed to confirm booking');
+          socket.on("rideConfirmed", (data) => {
+            const bookingElement = document.getElementById(
+              `booking-${data.bookingId}`
+            );
+            if (bookingElement) {
+              bookingElement.remove();
+              alert(`Booking ${data.bookingId} has been confirmed by you.`);
             }
+          });
+        } catch (error) {
+          console.error("Error during login:", error);
+          alert("Login failed");
         }
+      }
+
+      async function confirmBooking(bookingId) {
+        try {
+          const response = await fetch(
+            "http://localhost:3030/api/bookings/confirm",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ bookingId }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log(data);
+
+          alert("Booking confirmed: " + JSON.stringify(data.data));
+
+          const bookingElement = document.getElementById(
+            `booking-${bookingId}`
+          );
+          if (bookingElement) {
+            bookingElement.remove();
+          }
+        } catch (error) {
+          console.error("Error confirming booking:", error);
+          alert("Failed to confirm booking");
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

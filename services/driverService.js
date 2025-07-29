@@ -6,16 +6,15 @@ const updateLocation = async (driverId, { latitude, longitude }) => {
     const lon = parseFloat(longitude);
   
     if (isNaN(lat) || isNaN(lon)) {
-      throw new Error('Invalid coordinates');
+      throw new Error('Invalid Coordinates');
     }
   
     console.log(`Adding to Redis: ${lon.toString()} ${lat.toString()} ${driverId}`);
   
     try {
-        const res = await locationService.addDriverLocation(driverId, lat, lon);
-        console.log(res);
+        await locationService.addDriverLocation(driverId, lat, lon);
     } catch(error) {
-        console.log(error);
+        throw new Error(error);
     }
     
   

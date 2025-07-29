@@ -11,7 +11,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = await User.findById(verified.id);
     next();
   } catch (error) {
-    res.status(400).send('Invalid Token');
+    res.status(500).send('Invalid Token');
   }
 };
 

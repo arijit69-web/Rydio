@@ -32,8 +32,8 @@ class locationService {
       await redisClient.sendCommand([
         'GEOADD',
         'drivers',
-        latitude.toString(),
         longitude.toString(),
+        latitude.toString(),
         driverId.toString()
       ]);
     } catch (error) {
